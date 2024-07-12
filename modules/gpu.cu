@@ -3,7 +3,7 @@
 #include <stdio.h>
 
 #include "../cellmodels/Land_2016.hpp"
-#include "../cellmodels/Ohara_Rudy_2011.hpp"
+#include "../cellmodels/Ohara_Rudy_cipa_v1_2017.hpp"
 #include "../utils/constants.hpp"
 #include "glob_funct.hpp"
 #include "glob_type.hpp"
