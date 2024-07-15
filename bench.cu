@@ -34,7 +34,11 @@ int main(int argc, char **argv) {
     double *ic50 = (double *)malloc(14 * sample_limit * sizeof(double));
     double *conc = (double *)malloc(sample_limit * sizeof(double));
     double *cvar = (double *)malloc(18 * sample_limit * sizeof(double));
+    double* herg = (double *)malloc(6 * sizeof(double));
+    
+    int herg_size = get_herg_data_from_file(const char* file_name, double *herg)
     char *drug_name = get_drug_name(p_param->hill_file);
+
     double *d_ic50, *d_conc, *d_cvar, *d_ALGEBRAIC, *d_CONSTANTS, *d_RATES, *d_STATES, *d_STATES_RESULT, *d_STATES_init;
     double *d_mec_ALGEBRAIC, *d_mec_CONSTANTS, *d_mec_RATES, *d_mec_STATES;
     double *time, *dt, *states, *ical, *inal, *cai_result, *ina, *ito, *ikr, *iks, *ik1, *tension;
