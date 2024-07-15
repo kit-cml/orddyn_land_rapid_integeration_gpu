@@ -35,16 +35,16 @@ int main(int argc, char **argv) {
     double *conc = (double *)malloc(sample_limit * sizeof(double));
     double *cvar = (double *)malloc(18 * sample_limit * sizeof(double));
     double* herg = (double *)malloc(6 * sizeof(double));
-    
-    int herg_size = get_herg_data_from_file(const char* file_name, double *herg)
+
     char *drug_name = get_drug_name(p_param->hill_file);
 
-    double *d_ic50, *d_conc, *d_cvar, *d_ALGEBRAIC, *d_CONSTANTS, *d_RATES, *d_STATES, *d_STATES_RESULT, *d_STATES_init;
+    double *d_ic50, *d_conc, *d_cvar, d_herg, *d_ALGEBRAIC, *d_CONSTANTS, *d_RATES, *d_STATES, *d_STATES_RESULT, *d_STATES_init;
     double *d_mec_ALGEBRAIC, *d_mec_CONSTANTS, *d_mec_RATES, *d_mec_STATES;
     double *time, *dt, *states, *ical, *inal, *cai_result, *ina, *ito, *ikr, *iks, *ik1, *tension;
     cipa_t *temp_result, *cipa_result;
 
     int sample_size = get_IC50_data_from_file(p_param->hill_file, ic50, conc);
+    int herg_size = get_herg_data_from_file(p_param->file_name, herg)
     int blocksPerGrid = (sample_size + threadsPerBlock - 1) / threadsPerBlock;
     printf("Sample size: %d\nSet GPU Number: %d\n", sample_size, p_param->gpu_index);
 
@@ -57,7 +57,7 @@ int main(int argc, char **argv) {
 
     prepingGPUMemory(sample_size, d_ALGEBRAIC, d_CONSTANTS, d_RATES, d_STATES, d_mec_ALGEBRAIC, d_mec_CONSTANTS,
                      d_mec_RATES, d_mec_STATES, d_p_param, temp_result, cipa_result, d_STATES_RESULT, d_ic50, ic50,
-                     d_conc, conc, p_param);
+                     d_conc, conc, p_param, d_herg, herg);
 
     tic();
 
@@ -322,7 +322,7 @@ int main(int argc, char **argv) {
            blocksPerGrid, threadsPerBlock);
 
     kernel_DrugSimulation<<<blocksPerGrid, threadsPerBlock>>>(
-        d_ic50, d_cvar, d_conc, d_CONSTANTS, d_STATES, d_STATES_init, d_RATES, d_ALGEBRAIC, d_STATES_RESULT,
+        d_ic50, d_cvar, d_conc, d_herg, d_CONSTANTS, d_STATES, d_STATES_init, d_RATES, d_ALGEBRAIC, d_STATES_RESULT,
         d_mec_CONSTANTS, d_mec_STATES, d_mec_RATES, d_mec_ALGEBRAIC, time, states, dt, cai_result, ina, inal, ical, ito,
         ikr, iks, ik1, sample_size, temp_result, cipa_result, d_p_param);
     cudaDeviceSynchronize();

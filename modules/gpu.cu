@@ -26,7 +26,7 @@
  * @param cipa_result CIPA result array.
  * @param p_param Parameters.
  */
-__global__ void kernel_DrugSimulation(double *d_ic50, double *d_cvar, double *d_conc, double *d_CONSTANTS,
+__global__ void kernel_DrugSimulation(double *d_ic50, double *d_cvar, double *d_conc, double *d_herg, double *d_CONSTANTS,
                                       double *d_STATES, double *d_STATES_init, double *d_RATES, double *d_ALGEBRAIC,
                                       double *d_mec_CONSTANTS, double *d_mec_RATES, double *d_mec_STATES,
                                       double *d_mec_ALGEBRAIC, double *d_STATES_RESULT, double *time, double *states,

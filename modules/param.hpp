@@ -22,6 +22,7 @@ struct param_t {
     char cache_file[1024];                ///< File name for in-silico cache data
     char cvar_file[1024];                ///< File name for conductance variability data
     char drug_name[100];                 ///< Name of the drug
+    char herg_file[100]; 
     float conc;                          ///< Drug concentration
     int is_time_series;
     int sampling_limit;

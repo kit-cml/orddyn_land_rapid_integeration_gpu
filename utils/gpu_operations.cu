@@ -31,7 +31,7 @@ void prepingGPUMemory(int sample_size, double *&d_ALGEBRAIC, double *&d_CONSTANT
                       double *&d_mec_ALGEBRAIC, double *&d_mec_CONSTANTS, double *&d_mec_RATES, double *&d_mec_STATES,
                       param_t *&d_p_param, cipa_t *&temp_result, cipa_t *&cipa_result, double *&d_STATES_RESULT, double *&d_ic50, 
                       
-                      double *ic50, double *&d_conc, double *conc, param_t *p_param) {
+                      double *ic50, double *&d_conc, double *conc, param_t *p_param, double *&d_herg, double *herg) {
     printf("preparing GPU memory space \n");
 
     // Allocate memory on the device
@@ -51,9 +51,11 @@ void prepingGPUMemory(int sample_size, double *&d_ALGEBRAIC, double *&d_CONSTANT
     // Allocate memory for IC50 and concentration data
     cudaMalloc(&d_ic50, sample_size * 14 * sizeof(double));
     cudaMalloc(&d_conc, sample_size * sizeof(double));
+    cudaMalloc(&d_herg, sample_size * 6 * sizeof(double));
 
     // Copy data from host to device
     printf("Copying sample files to GPU memory space \n");
+    cudaMemcpy(d_herg, herg, sample_size * 6 * sizeof(double), cudaMemcpyHostToDevice);
     cudaMemcpy(d_ic50, ic50, sample_size * 14 * sizeof(double), cudaMemcpyHostToDevice);
     cudaMemcpy(d_conc, conc, sample_size * sizeof(double), cudaMemcpyHostToDevice);
     cudaMemcpy(d_p_param, p_param, sizeof(param_t), cudaMemcpyHostToDevice);
