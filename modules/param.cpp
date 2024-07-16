@@ -42,5 +42,6 @@ void param_t::show_val() {
     mpi_printf(0, "%s -- %hu\n", "Pace_Find_Steepest", find_steepest_start);
     mpi_printf(0, "%s -- %lf\n", "Time_Step", dt);
     mpi_printf(0, "%s -- %s\n", "Drug_Name", drug_name);
+    mpi_printf(0, "%s -- %s\n", "herg_file", herg_file);
     mpi_printf(0, "%s -- %lf\n\n\n", "Concentrations", conc);
 }

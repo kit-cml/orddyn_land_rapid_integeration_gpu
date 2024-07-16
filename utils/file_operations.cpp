@@ -196,15 +196,23 @@ void write_results_to_file(const char *base_dir, const char *drug_name, double *
     fclose(writer);
 }
 
-int get_herg_data_from_file(const char* file_name, double *herg)
+int get_herg_data_from_file(const char* dir_name, char* drugname, double *herg)
 {
   FILE *fp_herg;
   char *token;
+  char full_herg_file_name[150];
   char buffer_herg[255];
   unsigned int idx;
 
-  if( (fp_herg = fopen(file_name, "r")) == NULL){
-    printf("Cannot open file %s\n", file_name);
+  strcpy(full_herg_file_name, dir_name);
+  strcat(full_herg_file_name,"/");
+  strcat(drugname,".csv");
+  strcat(full_herg_file_name,drugname);
+
+  printf("reading herg file: %s\n",full_herg_file_name);
+
+  if( (fp_herg = fopen(full_herg_file_name, "r")) == NULL){
+    printf("Cannot open file %s\n", full_herg_file_name);
     return 0;
   }
   idx = 0;
@@ -222,5 +230,6 @@ int get_herg_data_from_file(const char* file_name, double *herg)
     } // end line reading
 
   fclose(fp_herg);
+  printf("%lf, %lf, %lf, %lf, %lf, %lf\n",herg[0],herg[1],herg[2],herg[3],herg[4],herg[5]);
   return sample_size;
 }

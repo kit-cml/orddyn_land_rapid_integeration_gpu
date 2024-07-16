@@ -43,8 +43,9 @@ int main(int argc, char **argv) {
     double *time, *dt, *states, *ical, *inal, *cai_result, *ina, *ito, *ikr, *iks, *ik1, *tension;
     cipa_t *temp_result, *cipa_result;
 
-    int sample_size = get_IC50_data_from_file(p_param->hill_file, ic50, conc);
-    int herg_size = get_herg_data_from_file(p_param->herg_file, herg);
+    int herg_size = get_herg_data_from_file(p_param->herg_file, drug_name, herg);
+
+    int sample_size = get_IC50_data_from_file(p_param->hill_file, ic50, conc); 
     int blocksPerGrid = (sample_size + threadsPerBlock - 1) / threadsPerBlock;
     printf("Sample size: %d\nSet GPU Number: %d\n", sample_size, p_param->gpu_index);
 

@@ -48,6 +48,6 @@ void write_results_to_file(const char *base_dir, const char *drug_name, double *
 
 int get_init_data_from_file(const char* file_name, double *init_states);
 
-int get_herg_data_from_file(const char* file_name, double *herg);
+int get_herg_data_from_file(const char* dir_name, char* drugname, double *herg);
 
 #endif  // FILE_OPERATIONS_HPP
