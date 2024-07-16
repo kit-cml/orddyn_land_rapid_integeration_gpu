@@ -51,11 +51,11 @@ void prepingGPUMemory(int sample_size, double *&d_ALGEBRAIC, double *&d_CONSTANT
     // Allocate memory for IC50 and concentration data
     cudaMalloc(&d_ic50, sample_size * 14 * sizeof(double));
     cudaMalloc(&d_conc, sample_size * sizeof(double));
-    cudaMalloc(&d_herg, sample_size * 6 * sizeof(double));
+    cudaMalloc(&d_herg, 6 * sizeof(double));
 
     // Copy data from host to device
     printf("Copying sample files to GPU memory space \n");
-    cudaMemcpy(d_herg, herg, sample_size * 6 * sizeof(double), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_herg, herg, 6 * sizeof(double), cudaMemcpyHostToDevice);
     cudaMemcpy(d_ic50, ic50, sample_size * 14 * sizeof(double), cudaMemcpyHostToDevice);
     cudaMemcpy(d_conc, conc, sample_size * sizeof(double), cudaMemcpyHostToDevice);
     cudaMemcpy(d_p_param, p_param, sizeof(param_t), cudaMemcpyHostToDevice);
