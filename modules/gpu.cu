@@ -42,14 +42,14 @@ __global__ void kernel_DrugSimulation(double *d_ic50, double *d_cvar, double *d_
 
     // printf("Calculating %d\n",thread_id);
      // Run the drug simulation for each sample
-    kernel_DoDrugSim_init(d_ic50, d_cvar, d_conc[thread_id], d_CONSTANTS, d_STATES, d_RATES, d_ALGEBRAIC,
+    kernel_DoDrugSim_init(d_ic50, d_cvar, d_conc[thread_id], d_herg, d_CONSTANTS, d_STATES, d_RATES, d_ALGEBRAIC,
                           d_mec_CONSTANTS, d_mec_RATES, d_mec_STATES, d_mec_ALGEBRAIC, d_STATES_RESULT,
                           time_for_each_sample, dt_for_each_sample, thread_id, sample_size, temp_result, cipa_result,
                           p_param);
     
 }
 
-__global__ void kernel_DrugSimulation_postpro(double *d_ic50, double *d_cvar, double *d_conc, double *d_CONSTANTS,
+__global__ void kernel_DrugSimulation_postpro(double *d_ic50, double *d_cvar, double *d_conc, double *d_herg, double *d_CONSTANTS,
                                       double *d_STATES, double *d_STATES_cache, double *d_RATES, double *d_ALGEBRAIC,
                                       double *d_mec_CONSTANTS, double *d_mec_STATES, double *d_mec_RATES,
                                       double *d_mec_ALGEBRAIC, double *d_STATES_RESULT, double *d_all_states,
@@ -65,7 +65,7 @@ __global__ void kernel_DrugSimulation_postpro(double *d_ic50, double *d_cvar, do
 
     if(thread_id==0) printf("%lf %lf\n",d_STATES_cache[0],d_STATES_cache[1]);
 
-    kernel_DoDrugSim_post(d_ic50, d_cvar, d_conc[thread_id], d_CONSTANTS, d_STATES, d_STATES_cache, d_RATES,
+    kernel_DoDrugSim_post(d_ic50, d_cvar, d_conc[thread_id], d_herg, d_CONSTANTS, d_STATES, d_STATES_cache, d_RATES,
                             d_ALGEBRAIC, d_mec_CONSTANTS, d_mec_STATES, d_mec_RATES, d_mec_ALGEBRAIC, time, states,
                             out_dt, cai_result, ina, inal, ical, ito, ikr, iks, ik1, tension, time_for_each_sample,
                             dt_for_each_sample, thread_id, sample_size, temp_result, cipa_result, p_param);
@@ -90,7 +90,7 @@ __global__ void kernel_DrugSimulation_postpro(double *d_ic50, double *d_cvar, do
  * @param cipa_result CIPA result array.
  * @param p_param Parameters.
  */
-__device__ void kernel_DoDrugSim_init(double *d_ic50, double *d_cvar, double d_conc, double *d_CONSTANTS,
+__device__ void kernel_DoDrugSim_init(double *d_ic50, double *d_cvar, double d_conc, double *d_herg, double *d_CONSTANTS,
                                       double *d_STATES, double *d_RATES, double *d_ALGEBRAIC, double *d_STATES_RESULT,
                                       double *d_mec_CONSTANTS, double *d_mec_RATES, double *d_mec_STATES,
                                       double *d_mec_ALGEBRAIC, double *tcurr, double *dt, unsigned short sample_id,
@@ -144,7 +144,7 @@ __device__ void kernel_DoDrugSim_init(double *d_ic50, double *d_cvar, double d_c
     double vm_repol30, vm_repol90;
 
     // Initialize constants and apply drug effects
-    initConsts(d_CONSTANTS, d_STATES, type, conc, d_ic50, d_herg, d_cvar, p_param->is_dutta, p_param->is_cvar, bcl, sample_id);
+    initConsts(d_CONSTANTS, d_STATES, type, conc, d_ic50, d_herg, d_cvar, p_param->is_dutta, p_param->is_cvar, bcl, epsilon, sample_id);
     applyDrugEffect(d_CONSTANTS, conc, d_ic50, epsilon, sample_id);
     land_initConsts(false, false, y, d_mec_CONSTANTS, d_mec_RATES, d_mec_STATES, d_mec_ALGEBRAIC, sample_id);
 
@@ -154,7 +154,7 @@ __device__ void kernel_DoDrugSim_init(double *d_ic50, double *d_cvar, double d_c
     // dt_set = 0.001;
     while (tcurr[sample_id] < tmax) {
         // Compute rates
-        coupledComputeRates(tcurr[sample_id], d_CONSTANTS, d_RATES, d_STATES, d_ALGEBRAIC, sample_id,
+        computeRates(tcurr[sample_id], d_CONSTANTS, d_RATES, d_STATES, d_ALGEBRAIC, sample_id,
                      d_mec_RATES[TRPN + (sample_id * Land_num_of_rates)]);
         land_computeRates(tcurr[sample_id], d_mec_CONSTANTS, d_mec_RATES, d_mec_STATES, d_mec_ALGEBRAIC, y, sample_id);
         // Set time step (adaptive dt)
@@ -248,7 +248,7 @@ __device__ void kernel_DoDrugSim_init(double *d_ic50, double *d_cvar, double d_c
     }
 }
 
-__device__ void kernel_DoDrugSim_post(double *d_ic50, double *d_cvar, double d_conc, double *d_CONSTANTS,
+__device__ void kernel_DoDrugSim_post(double *d_ic50, double *d_cvar, double d_conc, double *d_herg, double *d_CONSTANTS,
                                         double *d_STATES, double *d_STATES_cache, double *d_RATES, double *d_ALGEBRAIC,
                                         double *d_mec_CONSTANTS, double *d_mec_STATES, double *d_mec_RATES,
                                         double *d_mec_ALGEBRAIC, double *time, double *states, double *out_dt,
@@ -375,7 +375,7 @@ __device__ void kernel_DoDrugSim_post(double *d_ic50, double *d_cvar, double d_c
 	  // static const int CURRENT_SCALING = 1000;
 
     // printf("Core %d:\n",sample_id);
-    initConsts(d_CONSTANTS, d_STATES, type, conc, d_ic50, d_herg, d_cvar, p_param->is_dutta, p_param->is_cvar, bcl, sample_id);
+    initConsts(d_CONSTANTS, d_STATES, type, conc, d_ic50, d_herg, d_cvar, p_param->is_dutta, p_param->is_cvar, bcl, epsilon, sample_id);
     applyDrugEffect(d_CONSTANTS, conc, d_ic50, epsilon, sample_id);
     land_initConsts(false, false, y, d_mec_CONSTANTS, d_mec_RATES, d_mec_STATES, d_mec_ALGEBRAIC, sample_id);
 
@@ -414,7 +414,7 @@ __device__ void kernel_DoDrugSim_post(double *d_ic50, double *d_cvar, double d_c
     // printf("%lf,%lf,%lf,%lf,%lf\n", d_ic50[0 + (14*sample_id)], d_ic50[1+ (14*sample_id)], d_ic50[2+ (14*sample_id)], d_ic50[3+ (14*sample_id)], d_ic50[4+ (14*sample_id)]);
     while (tcurr[sample_id]<tmax)
     {
-         coupledComputeRates(tcurr[sample_id], d_CONSTANTS, d_RATES, d_STATES, d_ALGEBRAIC, sample_id,
+         computeRates(tcurr[sample_id], d_CONSTANTS, d_RATES, d_STATES, d_ALGEBRAIC, sample_id,
                      d_mec_RATES[TRPN + (sample_id * Land_num_of_rates)]);
         land_computeRates(tcurr[sample_id], d_mec_CONSTANTS, d_mec_RATES, d_mec_STATES, d_mec_ALGEBRAIC, y, sample_id);
         
