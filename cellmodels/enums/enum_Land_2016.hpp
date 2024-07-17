@@ -18,7 +18,6 @@ enum E_CONSTANTS_T{
     gamma_wu = 13,
     phi = 14,
     nperm = 15,
-    //ca50 = 16,
     Tref = 16,
     nu = 17,
     mu = 18,

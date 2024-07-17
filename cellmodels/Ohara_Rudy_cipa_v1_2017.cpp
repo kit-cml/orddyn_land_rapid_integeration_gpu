@@ -824,14 +824,15 @@ STATES[(states_size * offset) + D] = CONSTANTS[(constant_size * offset) + cnc];
 
 __device__ void initConsts(double *CONSTANTS, double *STATES, double type, double conc, double *ic50, double *herg, double *cvar, bool is_dutta, bool is_cvar, double bcl, double epsilon, int offset)
 {
+  short constant_size = 206;
 	___initConsts(CONSTANTS, STATES, type, bcl, offset);
 	// mpi_printf(0,"Celltype: %lf\n", CONSTANTS[celltype]);
 	// mpi_printf(0,"Control %lf %lf %lf %lf %lf\n", CONSTANTS[PCa], CONSTANTS[GK1], CONSTANTS[GKs], CONSTANTS[GNaL], CONSTANTS[GKr]);
 	applyDrugEffect(CONSTANTS, conc, ic50, epsilon, offset);
 	// mpi_printf(0,"After drug %lf %lf %lf %lf %lf\n", CONSTANTS[PCa], CONSTANTS[GK1], CONSTANTS[GKs], CONSTANTS[GNaL], CONSTANTS[GKr]);
-	// mpi_printf(0,"Control hERG binding %lf %lf %lf %lf %lf %lf\n", CONSTANTS[Kmax], CONSTANTS[Ku], CONSTANTS[n], CONSTANTS[halfmax], CONSTANTS[Vhalf], CONSTANTS[cnc]);
+	if (offset == 1) printf("Control hERG binding %lf %lf %lf %lf %lf %lf\n", CONSTANTS[(constant_size * offset) + Kmax], CONSTANTS[(constant_size * offset) + Ku], CONSTANTS[(constant_size * offset) + n], CONSTANTS[(constant_size * offset) + halfmax], CONSTANTS[ (constant_size * offset) + Vhalf], CONSTANTS[(constant_size * offset) + cnc]);
 	___applyHERGBinding(CONSTANTS, STATES, conc, herg, offset);
-	// mpi_printf(0,"Bootstrapped hERG binding %lf %lf %lf %lf %lf %lf\n", CONSTANTS[Kmax], CONSTANTS[Ku], CONSTANTS[n], CONSTANTS[halfmax], CONSTANTS[Vhalf], CONSTANTS[cnc]);
+	if (offset == 1) printf("Bootstrapped hERG binding %lf %lf %lf %lf %lf %lf\n", CONSTANTS[(constant_size * offset) + Kmax], CONSTANTS[(constant_size * offset) + Ku], CONSTANTS[(constant_size * offset) + n], CONSTANTS[(constant_size * offset) + halfmax], CONSTANTS[ (constant_size * offset) + Vhalf], CONSTANTS[(constant_size * offset) + cnc]);
 }
 
 __device__ void computeRates( double TIME, double *CONSTANTS, double *RATES, double *STATES, double *ALGEBRAIC, int offset, double land_trpn )
@@ -1090,6 +1091,7 @@ RATES[(rates_size * offset) + V] = - (ALGEBRAIC[(algebraic_size * offset) + INa]
 RATES[(rates_size * offset) + cass] =  ALGEBRAIC[(algebraic_size * offset) + Bcass]*((( - (ALGEBRAIC[(algebraic_size * offset) + ICaL] -  2.00000*ALGEBRAIC[(algebraic_size * offset) + INaCa_ss])*CONSTANTS[(constant_size * offset) +  cm]*CONSTANTS[(constant_size * offset) +  Acap])/( 2.00000*CONSTANTS[(constant_size * offset) +  F]*CONSTANTS[(constant_size * offset) +  vss])+( ALGEBRAIC[(algebraic_size * offset) + Jrel]*CONSTANTS[(constant_size * offset) +  vjsr])/CONSTANTS[(constant_size * offset) +  vss]) - ALGEBRAIC[(algebraic_size * offset) + Jdiff]);
 //modified for coupling
 RATES[(offset * rates_size) + ca_trpn] = CONSTANTS[(offset * constant_size) + trpnmax] * land_trpn;
+// if (offset == 1) printf("ca_trpn: %lf\n",land_trpn);
 RATES[(rates_size * offset) + cai] =  ALGEBRAIC[(algebraic_size * offset) + Bcai]*((( - ((ALGEBRAIC[(algebraic_size * offset) + IpCa]+ALGEBRAIC[(algebraic_size * offset) + ICab]) -  2.00000*ALGEBRAIC[(algebraic_size * offset) + INaCa_i])*CONSTANTS[(constant_size * offset) +  cm]*CONSTANTS[(constant_size * offset) +  Acap])/( 2.00000*CONSTANTS[(constant_size * offset) +  F]*CONSTANTS[(constant_size * offset) +  vmyo]) - ( ALGEBRAIC[(algebraic_size * offset) + Jup]*CONSTANTS[(constant_size * offset) +  vnsr])/CONSTANTS[(constant_size * offset) +  vmyo])+( ALGEBRAIC[(algebraic_size * offset) + Jdiff]*CONSTANTS[(constant_size * offset) +  vss])/CONSTANTS[(constant_size * offset) +  vmyo] - RATES[(offset * rates_size) + ca_trpn]); //modified
 RATES[(rates_size * offset) + cansr] = ALGEBRAIC[(algebraic_size * offset) + Jup] - ( ALGEBRAIC[(algebraic_size * offset) + Jtr]*CONSTANTS[(constant_size * offset) +  vjsr])/CONSTANTS[(constant_size * offset) +  vnsr];
 RATES[(rates_size * offset) + cajsr] =  ALGEBRAIC[(algebraic_size * offset) + Bcajsr]*(ALGEBRAIC[(algebraic_size * offset) + Jtr] - ALGEBRAIC[(algebraic_size * offset) + Jrel]);

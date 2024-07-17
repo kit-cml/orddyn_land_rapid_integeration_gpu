@@ -191,12 +191,14 @@ __device__ void land_computeRates(double TIME, double *CONSTANTS, double *RATES,
     ALGEBRAIC[offset * Land_num_of_algebraic + ca50] +=
         CONSTANTS[offset * Land_num_of_constants + beta_1] *
         check_min(0.2, CONSTANTS[offset * Land_num_of_constants + lambda] - 1);
+        
     RATES[offset * Land_num_of_rates + TRPN] =
         CONSTANTS[offset * Land_num_of_constants + koff] *
         (pow((CONSTANTS[offset * Land_num_of_constants + Cai] / ALGEBRAIC[offset * Land_num_of_algebraic + ca50]),
              CONSTANTS[offset * Land_num_of_constants + TRPN_n]) *
              (1 - STATES[offset * Land_num_of_states + TRPN]) -
          STATES[offset * Land_num_of_states + TRPN]);
+         if (offset == 1) printf("ca_trpn: %lf\n",RATES[offset * Land_num_of_rates + TRPN]);
 
     ALGEBRAIC[offset * Land_num_of_algebraic + XSSS] = CONSTANTS[offset * Land_num_of_constants + dr] * 0.5;
     ALGEBRAIC[offset * Land_num_of_algebraic + XWSS] =
