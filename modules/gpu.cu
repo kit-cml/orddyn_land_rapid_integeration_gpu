@@ -154,6 +154,7 @@ __device__ void kernel_DoDrugSim_init(double *d_ic50, double *d_cvar, double d_c
     // dt_set = 0.001;
     while (tcurr[sample_id] < tmax) {
         // Compute rates
+        // land_computeRates(tcurr[sample_id], d_mec_CONSTANTS, d_mec_RATES, d_mec_STATES, d_mec_ALGEBRAIC, y, sample_id);
         computeRates(tcurr[sample_id], d_CONSTANTS, d_RATES, d_STATES, d_ALGEBRAIC, sample_id,
                      d_mec_RATES[TRPN + (sample_id * Land_num_of_rates)]);
         land_computeRates(tcurr[sample_id], d_mec_CONSTANTS, d_mec_RATES, d_mec_STATES, d_mec_ALGEBRAIC, y, sample_id);
@@ -196,9 +197,12 @@ __device__ void kernel_DoDrugSim_init(double *d_ic50, double *d_cvar, double d_c
         }
 
         // Solve ODEs analytically
+
         solveAnalytical(d_CONSTANTS, d_STATES, d_ALGEBRAIC, d_RATES, dt[sample_id], sample_id);
+        
         land_solveEuler(dt[sample_id], tcurr[sample_id], d_STATES[cai + (sample_id * ORd_num_of_states)] * 1000.,
                         d_mec_CONSTANTS, d_mec_RATES, d_mec_STATES, sample_id);
+       
 
         // Perform checks in the last few pacing cycles
         if (pace_count >= pace_max - last_drug_check_pace) {

@@ -1248,7 +1248,11 @@ short rates_size = 50;
   STATES[(states_size * offset) + nass] = STATES[(states_size * offset) + nass] + RATES[(rates_size * offset) + nass] * dt;
   STATES[(states_size * offset) + ki] = STATES[(states_size * offset) + ki] + RATES[(rates_size * offset) + ki] * dt;
   STATES[(states_size * offset) + kss] = STATES[(states_size * offset) + kss] + RATES[(rates_size * offset) + kss] * dt;
+
+  if(offset == 1) printf("cai_rates: %lf\n",RATES[(rates_size * offset) + cai]);
   STATES[(states_size * offset) + cai] = STATES[(states_size * offset) + cai] + RATES[(rates_size * offset) + cai] * dt;
+  if(offset == 1) printf("cai_states: %lf\n",STATES[(states_size * offset) + cai]);
+
   STATES[(states_size * offset) + cass] = STATES[(states_size * offset) + cass] + RATES[(rates_size * offset) + cass] * dt;
   STATES[(states_size * offset) + cansr] = STATES[(states_size * offset) + cansr] + RATES[(rates_size * offset) + cansr] * dt;
   STATES[(states_size * offset) + cajsr] = STATES[(states_size * offset) + cajsr] + RATES[(rates_size * offset) + cajsr] * dt;
