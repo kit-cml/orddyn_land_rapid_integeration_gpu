@@ -269,7 +269,7 @@ __device__ void land_computeRates(double TIME, double *CONSTANTS, double *RATES,
  */
 __device__ void land_solveEuler(double dt, double t, double Cai_input, double *CONSTANTS, double *RATES, double *STATES,
                                 int offset) {
-    if (offset == 1) printf("cai_input: %lf\n",Cai_input);
+    if (offset == 1) printf("cai_input received by land: %lf\n",Cai_input);
     CONSTANTS[offset * Land_num_of_constants + Cai] = Cai_input;
 
     STATES[offset * Land_num_of_states + XS] += RATES[offset * Land_num_of_rates + XS] * dt;
