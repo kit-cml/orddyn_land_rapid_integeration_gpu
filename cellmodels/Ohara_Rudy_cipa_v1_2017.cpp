@@ -1091,7 +1091,7 @@ RATES[(rates_size * offset) + V] = - (ALGEBRAIC[(algebraic_size * offset) + INa]
 RATES[(rates_size * offset) + cass] =  ALGEBRAIC[(algebraic_size * offset) + Bcass]*((( - (ALGEBRAIC[(algebraic_size * offset) + ICaL] -  2.00000*ALGEBRAIC[(algebraic_size * offset) + INaCa_ss])*CONSTANTS[(constant_size * offset) +  cm]*CONSTANTS[(constant_size * offset) +  Acap])/( 2.00000*CONSTANTS[(constant_size * offset) +  F]*CONSTANTS[(constant_size * offset) +  vss])+( ALGEBRAIC[(algebraic_size * offset) + Jrel]*CONSTANTS[(constant_size * offset) +  vjsr])/CONSTANTS[(constant_size * offset) +  vss]) - ALGEBRAIC[(algebraic_size * offset) + Jdiff]);
 //modified for coupling
 RATES[(offset * rates_size) + ca_trpn] = CONSTANTS[(offset * constant_size) + trpnmax] * land_trpn;
-if (offset == 1) printf("trpn max: %lf\n", CONSTANTS[(offset * constant_size) + trpnmax] );
+// if (offset == 1) printf("trpn max: %lf\n", CONSTANTS[(offset * constant_size) + trpnmax] );
 RATES[(rates_size * offset) + cai] =  ALGEBRAIC[(algebraic_size * offset) + Bcai]*((( - ((ALGEBRAIC[(algebraic_size * offset) + IpCa]+ALGEBRAIC[(algebraic_size * offset) + ICab]) -  2.00000*ALGEBRAIC[(algebraic_size * offset) + INaCa_i])*CONSTANTS[(constant_size * offset) +  cm]*CONSTANTS[(constant_size * offset) +  Acap])/( 2.00000*CONSTANTS[(constant_size * offset) +  F]*CONSTANTS[(constant_size * offset) +  vmyo]) - ( ALGEBRAIC[(algebraic_size * offset) + Jup]*CONSTANTS[(constant_size * offset) +  vnsr])/CONSTANTS[(constant_size * offset) +  vmyo])+( ALGEBRAIC[(algebraic_size * offset) + Jdiff]*CONSTANTS[(constant_size * offset) +  vss])/CONSTANTS[(constant_size * offset) +  vmyo] - RATES[(offset * rates_size) + ca_trpn]); //modified
 RATES[(rates_size * offset) + cansr] = ALGEBRAIC[(algebraic_size * offset) + Jup] - ( ALGEBRAIC[(algebraic_size * offset) + Jtr]*CONSTANTS[(constant_size * offset) +  vjsr])/CONSTANTS[(constant_size * offset) +  vnsr];
 RATES[(rates_size * offset) + cajsr] =  ALGEBRAIC[(algebraic_size * offset) + Bcajsr]*(ALGEBRAIC[(algebraic_size * offset) + Jtr] - ALGEBRAIC[(algebraic_size * offset) + Jrel]);
@@ -1249,9 +1249,9 @@ short rates_size = 50;
   STATES[(states_size * offset) + ki] = STATES[(states_size * offset) + ki] + RATES[(rates_size * offset) + ki] * dt;
   STATES[(states_size * offset) + kss] = STATES[(states_size * offset) + kss] + RATES[(rates_size * offset) + kss] * dt;
 
-  if(offset == 1) printf("cai_rates: %lf\n",RATES[(rates_size * offset) + cai]);
+  // if(offset == 1) printf("cai_rates (solve analytical): %lf\n",RATES[(rates_size * offset) + cai]);
   STATES[(states_size * offset) + cai] = STATES[(states_size * offset) + cai] + RATES[(rates_size * offset) + cai] * dt;
-  if(offset == 1) printf("cai_states: %lf\n",STATES[(states_size * offset) + cai]);
+  // if(offset == 1) printf("cai_states (solve analytical): %lf\n",STATES[(states_size * offset) + cai]);
 
   STATES[(states_size * offset) + cass] = STATES[(states_size * offset) + cass] + RATES[(rates_size * offset) + cass] * dt;
   STATES[(states_size * offset) + cansr] = STATES[(states_size * offset) + cansr] + RATES[(rates_size * offset) + cansr] * dt;
@@ -1261,7 +1261,7 @@ short rates_size = 50;
 //}
 }
 
-__device__ double ___gaussElimination(double *A, double *b, double *x, int N) {
+__device__ void ___gaussElimination(double *A, double *b, double *x, int N) {
         // Using A as a flat array to represent an N x N matrix
     for (int i = 0; i < N; i++) {
         // Search for maximum in this column

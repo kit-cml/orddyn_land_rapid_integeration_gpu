@@ -148,20 +148,27 @@ __device__ void kernel_DoDrugSim_init(double *d_ic50, double *d_cvar, double d_c
     applyDrugEffect(d_CONSTANTS, conc, d_ic50, epsilon, sample_id);
     land_initConsts(false, false, y, d_mec_CONSTANTS, d_mec_RATES, d_mec_STATES, d_mec_ALGEBRAIC, sample_id);
 
-    d_CONSTANTS[BCL + (sample_id * ORd_num_of_constants)] = bcl;
+    d_CONSTANTS[BCL + (sample_id * 206)] = bcl;
 
     // Main simulation loop
     // dt_set = 0.001;
     while (tcurr[sample_id] < tmax) {
         // Compute rates
         // land_computeRates(tcurr[sample_id], d_mec_CONSTANTS, d_mec_RATES, d_mec_STATES, d_mec_ALGEBRAIC, y, sample_id);
+        
+        land_computeRates(tcurr[sample_id], d_mec_CONSTANTS, d_mec_RATES, d_mec_STATES, d_mec_ALGEBRAIC, y, sample_id);
+        
+        if(sample_id == 1) printf("cai_rates (before compute rates): %lf\n",d_RATES[(50 * sample_id) + cai]);
         computeRates(tcurr[sample_id], d_CONSTANTS, d_RATES, d_STATES, d_ALGEBRAIC, sample_id,
                      d_mec_RATES[TRPN + (sample_id * Land_num_of_rates)]);
-        land_computeRates(tcurr[sample_id], d_mec_CONSTANTS, d_mec_RATES, d_mec_STATES, d_mec_ALGEBRAIC, y, sample_id);
+
+        if(sample_id == 1) printf("cai_rates (compute rates): %lf\n",d_RATES[(50 * sample_id) + cai]);             
+        if (sample_id == 1) printf("trpn max: %lf\n", d_CONSTANTS[(sample_id * ORd_num_of_constants) + trpnmax] );
+        
         // Set time step (adaptive dt)
         //NOTE: Disabled in Margara
-        dt_set = set_time_step(tcurr[sample_id], time_point, max_time_step, d_CONSTANTS, d_RATES, sample_id);
-        // dt_set = 0.005;
+        // dt_set = set_time_step(tcurr[sample_id], time_point, max_time_step, d_CONSTANTS, d_RATES, sample_id);
+        dt_set = 0.005;
         // Check if within the same cycle
         if (floor((tcurr[sample_id] + dt_set) / bcl) == floor(tcurr[sample_id] / bcl)) {
             dt[sample_id] = dt_set;
@@ -197,8 +204,9 @@ __device__ void kernel_DoDrugSim_init(double *d_ic50, double *d_cvar, double d_c
         }
 
         // Solve ODEs analytically
-
+        if(sample_id == 1) printf("cai_rates (before solve analytical): %lf\n",d_RATES[(50 * sample_id) + cai]);
         solveAnalytical(d_CONSTANTS, d_STATES, d_ALGEBRAIC, d_RATES, dt[sample_id], sample_id);
+        if(sample_id == 1) printf("cai_rates (solve analytical): %lf\n",d_RATES[(50 * sample_id) + cai]);
         
         land_solveEuler(dt[sample_id], tcurr[sample_id], d_STATES[cai + (sample_id * ORd_num_of_states)] * 1000.,
                         d_mec_CONSTANTS, d_mec_RATES, d_mec_STATES, sample_id);
