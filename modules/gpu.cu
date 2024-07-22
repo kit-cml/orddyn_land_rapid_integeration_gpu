@@ -148,7 +148,7 @@ __device__ void kernel_DoDrugSim_init(double *d_ic50, double *d_cvar, double d_c
     applyDrugEffect(d_CONSTANTS, conc, d_ic50, epsilon, sample_id);
     land_initConsts(false, false, y, d_mec_CONSTANTS, d_mec_RATES, d_mec_STATES, d_mec_ALGEBRAIC, sample_id);
 
-    d_CONSTANTS[BCL + (sample_id * 206)] = bcl;
+    d_CONSTANTS[BCL + (sample_id * ORd_num_of_constants)] = bcl;
 
     // Main simulation loop
     // dt_set = 0.001;
