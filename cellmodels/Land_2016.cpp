@@ -198,7 +198,7 @@ __device__ void land_computeRates(double TIME, double *CONSTANTS, double *RATES,
              CONSTANTS[offset * Land_num_of_constants + TRPN_n]) *
              (1 - STATES[offset * Land_num_of_states + TRPN]) -
          STATES[offset * Land_num_of_states + TRPN]);
-         if (offset == 1) printf("what makes rates trpn: %lf %lf %lf %lf %lf %lf\n",CONSTANTS[offset * Land_num_of_constants + koff], CONSTANTS[offset * Land_num_of_constants + Cai], ALGEBRAIC[offset * Land_num_of_algebraic + ca50], CONSTANTS[offset * Land_num_of_constants + TRPN_n], (1 - STATES[offset * Land_num_of_states + TRPN]), STATES[offset * Land_num_of_states + TRPN]);
+        //  if (offset == 1) printf("what makes rates trpn: %lf %lf %lf %lf %lf %lf\n",CONSTANTS[offset * Land_num_of_constants + koff], CONSTANTS[offset * Land_num_of_constants + Cai], ALGEBRAIC[offset * Land_num_of_algebraic + ca50], CONSTANTS[offset * Land_num_of_constants + TRPN_n], (1 - STATES[offset * Land_num_of_states + TRPN]), STATES[offset * Land_num_of_states + TRPN]);
 
     ALGEBRAIC[offset * Land_num_of_algebraic + XSSS] = CONSTANTS[offset * Land_num_of_constants + dr] * 0.5;
     ALGEBRAIC[offset * Land_num_of_algebraic + XWSS] =
@@ -269,7 +269,7 @@ __device__ void land_computeRates(double TIME, double *CONSTANTS, double *RATES,
  */
 __device__ void land_solveEuler(double dt, double t, double Cai_input, double *CONSTANTS, double *RATES, double *STATES,
                                 int offset) {
-    if (offset == 1) printf("cai_input received by land: %lf\n\n",Cai_input);
+    // if (offset == 1) printf("cai_input received by land: %lf\n\n",Cai_input);
     CONSTANTS[offset * Land_num_of_constants + Cai] = Cai_input;
 
     STATES[offset * Land_num_of_states + XS] += RATES[offset * Land_num_of_rates + XS] * dt;
