@@ -15,7 +15,7 @@ Basic_Cycle_Length = 1000
 # The total number of pacing cycles to be applied during the simulation.
 # This parameter determines how many times the pacing stimulus is applied.
 # Example: Number_of_Pacing = 1000
-Number_of_Pacing = 2
+Number_of_Pacing = 10
 
 # Simulation_Mode
 # The mode of simulation to be performed.
@@ -44,7 +44,7 @@ Is_Dutta = 1
 # 0: Perform in silico simulation
 # 1: Perform post-processing on previously generated data
 # Example: Is_Post_Processing = 0
-Is_Post_Processing = 0
+Is_Post_Processing = 1
 
 # Use_Conductance_Variability
 # Indicates whether to read an additional file containing individual conductance variability data.
@@ -57,4 +57,4 @@ Use_Conductance_Variability = 0
 # The timing to start searching for the steepest dV/dt repolarization (e.g., last 250 pacing cycles).
 # This parameter defines when to begin analyzing the steepest repolarization phase during pacing.
 # Example: Pace_Find_Steepest = 250
-Pace_Find_Steepest = 1
+Pace_Find_Steepest = 5
