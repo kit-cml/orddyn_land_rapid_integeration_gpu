@@ -57,9 +57,8 @@ __global__ void kernel_DrugSimulation_postpro(double *d_ic50, double *d_cvar, do
                                       double *time, double *states, double *out_dt, double *cai_result, double *ina,
                                       double *inal, double *ical, double *ito, double *ikr, double *iks, double *ik1, double *tension,
                                       unsigned int sample_size, cipa_t *temp_result, cipa_t *cipa_result, param_t *p_param) {
-
-    unsigned short thread_id;
-    thread_id = blockIdx.x * blockDim.x + threadIdx.x;
+                                
+    unsigned short thread_id = blockIdx.x * blockDim.x + threadIdx.x;
     if(thread_id==0) printf("%lf %lf\n",d_STATES_cache[0],d_STATES_cache[1]);
     if(thread_id >= sample_size){
         printf("too big\n");
@@ -267,8 +266,8 @@ __device__ void kernel_DoDrugSim_post(double *d_ic50, double *d_cvar, double d_c
                                       double *out_dt, double *cai_result, double *ina, double *inal, double *ical, double *ito, double *ikr, double *iks, double *ik1, double *tension, double *tcurr, 
                                       double *dt, unsigned short sample_id, unsigned int sample_size, cipa_t *temp_result, cipa_t *cipa_result, param_t *p_param) {
     unsigned long long input_counter = 0;
-
-   if(sample_id==0) printf("%lf %lf\n",d_STATES_cache[0],d_STATES_cache[1]);
+    
+  //  if(sample_id==0) printf("%lf %lf\n",d_STATES_cache[0],d_STATES_cache[1]);
     // INIT STARTS
     
     temp_result[sample_id].qnet = 0.;
@@ -335,7 +334,7 @@ __device__ void kernel_DoDrugSim_post(double *d_ic50, double *d_cvar, double d_c
     const double inet_vm_threshold = p_param->inet_vm_threshold;
     // const unsigned short pace_max = 300;
     // const unsigned short pace_max = 1000;
-    const unsigned short pace_max = 2;
+    const unsigned short pace_max = 1;
     // const unsigned short celltype = 0.;
     // const unsigned short last_pace_print = 3;
     // const unsigned short last_drug_check_pace = 250;
@@ -377,16 +376,21 @@ __device__ void kernel_DoDrugSim_post(double *d_ic50, double *d_cvar, double d_c
     // static const int CALCIUM_SCALING = 1000000;
 	  // static const int CURRENT_SCALING = 1000;
 
-    // printf("Core %d:\n",sample_id);
+    
     initConsts(d_CONSTANTS, d_STATES, type, conc, d_ic50, d_herg, d_cvar, p_param->is_dutta, p_param->is_cvar, bcl, epsilon, sample_id);
     applyDrugEffect(d_CONSTANTS, conc, d_ic50, epsilon, sample_id);
     land_initConsts(false, false, y, d_mec_CONSTANTS, d_mec_RATES, d_mec_STATES, d_mec_ALGEBRAIC, sample_id);
 
+// printf("in here\n");
+// printf("d_CONSTANTS %lf\n",d_CONSTANTS[(sample_id * ORd_num_of_constants)+0]);
     // starting from initial value, to make things simpler for now, we're just going to replace what initConst has done 
     // to the d_STATES and bring them back to cached initial values:
+    printf("%lf\n",d_STATES_cache[(sample_id * ORd_num_of_states) + 0]);
     for (int temp = 0; temp < ORd_num_of_states; temp++) {
+      printf("%lf\n",d_STATES_cache[(sample_id * ORd_num_of_states) + temp]);
         d_STATES[(sample_id * ORd_num_of_states) + temp] = d_STATES_cache[(sample_id * ORd_num_of_states) + temp];
     }
+    
     
     // these values will follow cache file (instead of regular init)
     temp_result[sample_id].vm_valley = d_STATES[(sample_id * ORd_num_of_states) +V];
@@ -403,7 +407,6 @@ __device__ void kernel_DoDrugSim_post(double *d_ic50, double *d_cvar, double d_c
 
 
     // printf("%d: %lf, %d\n", sample_id,d_STATES[V + (sample_id * ORd_num_of_states)], cnt);
-    applyDrugEffect(d_CONSTANTS, conc, d_ic50, epsilon, sample_id);
 
     d_CONSTANTS[BCL + (sample_id * ORd_num_of_constants)] = bcl;
 
@@ -421,10 +424,11 @@ __device__ void kernel_DoDrugSim_post(double *d_ic50, double *d_cvar, double d_c
 
         land_computeRates(tcurr[sample_id], d_mec_CONSTANTS, d_mec_RATES, d_mec_STATES, d_mec_ALGEBRAIC, y, sample_id);
         computeRates(tcurr[sample_id], d_CONSTANTS, d_RATES, d_STATES, d_ALGEBRAIC, sample_id, d_mec_RATES[TRPN + (sample_id * Land_num_of_rates)]);
-        
+        printf("in in in \n");
        //NOTE: Disabled in Margara
         dt_set = set_time_step(tcurr[sample_id], time_point, max_time_step, d_CONSTANTS, d_RATES, sample_id);
         // dt_set = 0.001;
+        
 
         if(d_STATES[(sample_id * ORd_num_of_states)+V] > inet_vm_threshold){
           inet += (d_ALGEBRAIC[(sample_id * ORd_num_of_algebraic) +INaL]+d_ALGEBRAIC[(sample_id * ORd_num_of_algebraic) +ICaL]+d_ALGEBRAIC[(sample_id * ORd_num_of_algebraic) +Ito]+d_ALGEBRAIC[(sample_id * ORd_num_of_algebraic) +IKr]+d_ALGEBRAIC[(sample_id * ORd_num_of_algebraic) +IKs]+d_ALGEBRAIC[(sample_id * ORd_num_of_algebraic) +IK1])*dt[sample_id];

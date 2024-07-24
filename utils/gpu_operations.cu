@@ -72,7 +72,7 @@ void prepingGPUMemoryPostpro(int sample_size, double *&d_ALGEBRAIC, double *&d_C
     cudaMalloc(&d_CONSTANTS, ORd_num_of_constants * sample_size * sizeof(double));
     cudaMalloc(&d_RATES, ORd_num_of_rates * sample_size * sizeof(double));
     cudaMalloc(&d_STATES, ORd_num_of_states * sample_size * sizeof(double));
-    cudaMalloc(&d_STATES_cache, (ORd_num_of_states + 2) * sample_size * sizeof(double));
+    cudaMalloc(&d_STATES_cache, (ORd_num_of_states) * sample_size * sizeof(double));
 
     cudaMalloc(&d_mec_ALGEBRAIC, Land_num_of_algebraic * sample_size * sizeof(double));
     cudaMalloc(&d_mec_CONSTANTS, Land_num_of_constants * sample_size * sizeof(double));
@@ -103,7 +103,7 @@ void prepingGPUMemoryPostpro(int sample_size, double *&d_ALGEBRAIC, double *&d_C
    cudaMalloc(&d_conc, sample_size * sizeof(double));
    cudaMalloc(&d_herg, 6 * sizeof(double));
 
-   cudaMemcpy(d_STATES_cache, cache, (ORd_num_of_states + 2) * sample_size * sizeof(double), cudaMemcpyHostToDevice);
+   cudaMemcpy(d_STATES_cache, cache, (ORd_num_of_states) * sample_size * sizeof(double), cudaMemcpyHostToDevice);
    cudaMemcpy(d_ic50, ic50, sample_size * 14 * sizeof(double), cudaMemcpyHostToDevice);
         
    // cudaMemcpy(d_cvar, cvar, sample_size * 18 * sizeof(double), cudaMemcpyHostToDevice);
