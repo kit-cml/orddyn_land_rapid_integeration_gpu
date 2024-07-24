@@ -33,6 +33,7 @@ __global__ void kernel_DrugSimulation(double *d_ic50, double *d_cvar, double *d_
                                       double *out_dt, double *cai_result, double *ina, double *inal, double *ical,
                                       double *ito, double *ikr, double *iks, double *ik1, unsigned int sample_size,
                                       cipa_t *temp_result, cipa_t *cipa_result, param_t *p_param) {
+
     unsigned short thread_id = blockIdx.x * blockDim.x + threadIdx.x;
     if (thread_id >= sample_size) return;
 
@@ -55,15 +56,17 @@ __global__ void kernel_DrugSimulation_postpro(double *d_ic50, double *d_cvar, do
                                       double *d_mec_ALGEBRAIC, double *d_STATES_RESULT, double *d_all_states,
                                       double *time, double *states, double *out_dt, double *cai_result, double *ina,
                                       double *inal, double *ical, double *ito, double *ikr, double *iks, double *ik1, double *tension,
-                                      unsigned int sample_size, cipa_t *temp_result, cipa_t *cipa_result,
-                                      param_t *p_param) {
+                                      unsigned int sample_size, cipa_t *temp_result, cipa_t *cipa_result, param_t *p_param) {
+
     unsigned short thread_id;
     thread_id = blockIdx.x * blockDim.x + threadIdx.x;
-    if (thread_id >= sample_size) return;
+    if(thread_id==0) printf("%lf %lf\n",d_STATES_cache[0],d_STATES_cache[1]);
+    if(thread_id >= sample_size){
+        printf("too big\n");
+        return;
+    } 
     double time_for_each_sample[10000];
     double dt_for_each_sample[10000];
-
-    if(thread_id==0) printf("%lf %lf\n",d_STATES_cache[0],d_STATES_cache[1]);
 
     kernel_DoDrugSim_post(d_ic50, d_cvar, d_conc[thread_id], d_herg, d_CONSTANTS, d_STATES, d_STATES_cache, d_RATES,
                             d_ALGEBRAIC, d_mec_CONSTANTS, d_mec_STATES, d_mec_RATES, d_mec_ALGEBRAIC, time, states,
@@ -161,7 +164,7 @@ __device__ void kernel_DoDrugSim_init(double *d_ic50, double *d_cvar, double d_c
         // if(sample_id == 1) printf("cai_rates (before ord compute rates): %lf\n",d_RATES[(ORd_num_of_rates * sample_id) + cai]);
         // if(sample_id == 1) printf("ca trpn (before goes into land): %lf\n",d_mec_RATES[TRPN + (sample_id * Land_ORd_num_of_rates)]);
        
-        computeRates(tcurr[sample_id], d_CONSTANTS, d_RATES, d_STATES, d_ALGEBRAIC, sample_id, d_mec_RATES[TRPN + (sample_id * Land_ORd_num_of_rates)]);
+        computeRates(tcurr[sample_id], d_CONSTANTS, d_RATES, d_STATES, d_ALGEBRAIC, sample_id, d_mec_RATES[TRPN + (sample_id * Land_num_of_rates)]);
        
         // if(sample_id == 1) printf("cai_rates (ord compute rates): %lf\n",d_RATES[(ORd_num_of_rates * sample_id) + cai]);             
         // if (sample_id == 1) printf("trpn max: %lf\n", d_CONSTANTS[(sample_id * ORd_num_of_constants) + trpnmax] );
@@ -266,8 +269,6 @@ __device__ void kernel_DoDrugSim_post(double *d_ic50, double *d_cvar, double d_c
     unsigned long long input_counter = 0;
 
    if(sample_id==0) printf("%lf %lf\n",d_STATES_cache[0],d_STATES_cache[1]);
-
-
     // INIT STARTS
     
     temp_result[sample_id].qnet = 0.;
@@ -416,17 +417,15 @@ __device__ void kernel_DoDrugSim_post(double *d_ic50, double *d_cvar, double d_c
     // printf("%lf,%lf,%lf,%lf,%lf\n", d_ic50[0 + (14*sample_id)], d_ic50[1+ (14*sample_id)], d_ic50[2+ (14*sample_id)], d_ic50[3+ (14*sample_id)], d_ic50[4+ (14*sample_id)]);
     while (tcurr[sample_id]<tmax)
     {
-         computeRates(tcurr[sample_id], d_CONSTANTS, d_RATES, d_STATES, d_ALGEBRAIC, sample_id,
-                     d_mec_RATES[TRPN + (sample_id * Land_ORd_num_of_rates)]);
+      // switch according to the new algo
+
         land_computeRates(tcurr[sample_id], d_mec_CONSTANTS, d_mec_RATES, d_mec_STATES, d_mec_ALGEBRAIC, y, sample_id);
+        computeRates(tcurr[sample_id], d_CONSTANTS, d_RATES, d_STATES, d_ALGEBRAIC, sample_id, d_mec_RATES[TRPN + (sample_id * Land_num_of_rates)]);
         
-        // dt_set = set_time_step( tcurr[sample_id], time_point, max_time_step, 
-        // d_CONSTANTS, 
-        // d_RATES, 
-        // d_STATES, 
-        // d_ALGEBRAIC, 
-        // sample_id); 
-        dt_set = 0.001;
+       //NOTE: Disabled in Margara
+        dt_set = set_time_step(tcurr[sample_id], time_point, max_time_step, d_CONSTANTS, d_RATES, sample_id);
+        // dt_set = 0.001;
+
         if(d_STATES[(sample_id * ORd_num_of_states)+V] > inet_vm_threshold){
           inet += (d_ALGEBRAIC[(sample_id * ORd_num_of_algebraic) +INaL]+d_ALGEBRAIC[(sample_id * ORd_num_of_algebraic) +ICaL]+d_ALGEBRAIC[(sample_id * ORd_num_of_algebraic) +Ito]+d_ALGEBRAIC[(sample_id * ORd_num_of_algebraic) +IKr]+d_ALGEBRAIC[(sample_id * ORd_num_of_algebraic) +IKs]+d_ALGEBRAIC[(sample_id * ORd_num_of_algebraic) +IK1])*dt[sample_id];
           inal_auc += d_ALGEBRAIC[(sample_id * ORd_num_of_algebraic) +INaL]*dt[sample_id];
@@ -531,9 +530,10 @@ __device__ void kernel_DoDrugSim_post(double *d_ic50, double *d_cvar, double d_c
           // printf("core: %d pace count: %d t: %lf, steepest: %d, dvmdt_repol: %lf, t_peak: %lf\n",sample_id,pace_count, tcurr[sample_id], pace_steepest, cipa_result[sample_id].dvmdt_repol,t_peak_capture);
           // writen = false;
         }
+        //ensured to follow new coupling algorithm
         solveAnalytical(d_CONSTANTS, d_STATES, d_ALGEBRAIC, d_RATES,  dt[sample_id], sample_id);
-        land_solveEuler(dt[sample_id], tcurr[sample_id], d_STATES[cai + (sample_id * ORd_num_of_states)] * 1000.,
-                            d_mec_CONSTANTS, d_mec_RATES, d_mec_STATES, sample_id);
+        land_solveEuler(dt[sample_id], tcurr[sample_id], d_STATES[cai + (sample_id * ORd_num_of_states)] * 1000., d_mec_CONSTANTS, d_mec_RATES, d_mec_STATES, sample_id);
+        
         if( temp_result[sample_id].dvmdt_max < d_RATES[(sample_id * ORd_num_of_states)+V] )temp_result[sample_id].dvmdt_max = d_RATES[(sample_id * ORd_num_of_states)+V];
           
           // this part should be

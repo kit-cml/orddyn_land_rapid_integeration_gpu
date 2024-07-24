@@ -69,8 +69,7 @@ int main(int argc, char **argv) {
         
         prepingGPUMemoryPostpro(sample_size, d_ALGEBRAIC, d_CONSTANTS, d_RATES, d_STATES, d_STATES_cache, d_mec_ALGEBRAIC, d_mec_CONSTANTS,
                      d_mec_RATES, d_mec_STATES, d_p_param, temp_result, cipa_result, d_STATES_RESULT, d_ic50, ic50,
-                     d_conc, conc, p_param, cache,
-                     time, dt, states, ical, inal, cai_result, ina, ito, ikr, iks, ik1, tension);
+                     d_conc, conc, d_herg, herg, p_param, cache, time, dt, states, ical, inal, cai_result, ina, ito, ikr, iks, ik1, tension);
 
         printf("Timer started, doing simulation.... \n\n\nGPU Usage at this moment: \n");
             if (gpu_check(15 * sample_size * datapoint_size * sizeof(double) + sizeof(param_t)) == 1) {
@@ -83,14 +82,17 @@ int main(int argc, char **argv) {
         // printf("[____________________________________________________________________________________________________]  0.00 %% \n");
 
         kernel_DrugSimulation_postpro<<<blocksPerGrid, threadsPerBlock>>>(d_ic50, d_cvar, d_conc, d_herg, d_CONSTANTS, 
-                                                d_STATES, d_STATES_cache, d_RATES, d_ALGEBRAIC,
+                                                 d_STATES, d_STATES_cache, d_RATES, d_ALGEBRAIC,
                                                  d_mec_CONSTANTS, d_mec_STATES, d_mec_RATES, 
                                                  d_mec_ALGEBRAIC, d_STATES_RESULT, d_all_states,
                                                  time, states, dt, cai_result, ina, 
                                                  inal, ical, ito, ikr, iks, ik1, tension, 
                                                  sample_size, temp_result, cipa_result, d_p_param);
 
-        cudaDeviceSynchronize();
+        cudaError_t err = cudaGetLastError();
+        printf("CUDA Error: %s\n", cudaGetErrorString(err));
+
+        // cudaDeviceSynchronize();
         // checked till here
 
         printf("allocating memory for computation result in the CPU, malloc style \n");
