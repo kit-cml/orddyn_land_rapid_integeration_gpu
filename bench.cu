@@ -66,11 +66,57 @@ int main(int argc, char **argv) {
 
         int cache_num = get_init_data_from_file(p_param->cache_file, cache);
         printf("Found cache for %d samples\n", cache_num);
-        printf("cache: %lf %lf %lf\n", cache[300+0],cache[300+1],cache[300+2]);
+        // printf("cache: %lf %lf %lf\n", cache[300+0],cache[300+1],cache[300+2]);
+
+        printf("preparing GPU memory space \n");
+
+        cudaMalloc(&d_ALGEBRAIC, ORd_num_of_algebraic * sample_size * sizeof(double));
+        cudaMalloc(&d_CONSTANTS, ORd_num_of_constants * sample_size * sizeof(double));
+        cudaMalloc(&d_RATES, ORd_num_of_rates * sample_size * sizeof(double));
+        cudaMalloc(&d_STATES, ORd_num_of_states * sample_size * sizeof(double));
+        cudaMalloc(&d_STATES_cache, (ORd_num_of_states+2) * sample_size * sizeof(double));
+
+        cudaMalloc(&d_mec_ALGEBRAIC, Land_num_of_algebraic * sample_size * sizeof(double));
+        cudaMalloc(&d_mec_CONSTANTS, Land_num_of_constants * sample_size * sizeof(double));
+        cudaMalloc(&d_mec_RATES, Land_num_of_rates * sample_size * sizeof(double));
+        cudaMalloc(&d_mec_STATES, Land_num_of_states * sample_size * sizeof(double));
+
+        cudaMalloc(&d_p_param, sizeof(param_t));
+
+        cudaMalloc(&temp_result, sample_size * sizeof(cipa_t));
+        cudaMalloc(&cipa_result, sample_size * sizeof(cipa_t));
         
-        prepingGPUMemoryPostpro(sample_size, d_ALGEBRAIC, d_CONSTANTS, d_RATES, d_STATES, d_STATES_cache, d_mec_ALGEBRAIC, d_mec_CONSTANTS,
-                     d_mec_RATES, d_mec_STATES, d_p_param, temp_result, cipa_result, d_STATES_RESULT, d_ic50, ic50, d_cvar, cvar,
-                     d_conc, conc, d_herg, herg, p_param, cache, time, dt, states, ical, inal, cai_result, ina, ito, ikr, iks, ik1, tension);
+
+        cudaMalloc(&time, sample_size * datapoint_size * sizeof(double));
+        cudaMalloc(&dt, sample_size * datapoint_size * sizeof(double));
+        cudaMalloc(&states, sample_size * datapoint_size * sizeof(double));
+        cudaMalloc(&ical, sample_size * datapoint_size * sizeof(double));
+        cudaMalloc(&inal, sample_size * datapoint_size * sizeof(double));
+        cudaMalloc(&cai_result, sample_size * datapoint_size * sizeof(double));
+        cudaMalloc(&ina, sample_size * datapoint_size * sizeof(double));
+        cudaMalloc(&ito, sample_size * datapoint_size * sizeof(double));
+        cudaMalloc(&ikr, sample_size * datapoint_size * sizeof(double));
+        cudaMalloc(&iks, sample_size * datapoint_size * sizeof(double));
+        cudaMalloc(&ik1, sample_size * datapoint_size * sizeof(double));
+        cudaMalloc(&tension, sample_size * datapoint_size * sizeof(double));
+
+        printf("Copying sample files to GPU memory space \n");
+        cudaMalloc(&d_ic50, sample_size * 14 * sizeof(double));
+        cudaMalloc(&d_cvar, sample_size * 18 * sizeof(double));
+        cudaMalloc(&d_conc, sample_size * sizeof(double));
+        cudaMalloc(&d_herg, 6 * sizeof(double));
+        
+        cudaMemcpy(d_ic50, ic50, sample_size * 14 * sizeof(double), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_cvar, cvar, sample_size * 18 * sizeof(double), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_conc, conc, sample_size * sizeof(double), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_p_param, p_param, sizeof(param_t), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_herg, herg, 6 * sizeof(double), cudaMemcpyHostToDevice);
+
+        cudaMemcpy(d_STATES_cache, cache, (ORd_num_of_states+2) * sample_size * sizeof(double), cudaMemcpyHostToDevice);
+        
+        // prepingGPUMemoryPostpro(sample_size, d_ALGEBRAIC, d_CONSTANTS, d_RATES, d_STATES, d_STATES_cache, d_mec_ALGEBRAIC, d_mec_CONSTANTS,
+        //              d_mec_RATES, d_mec_STATES, d_p_param, temp_result, cipa_result, d_STATES_RESULT, d_ic50, ic50, d_cvar, cvar,
+        //              d_conc, conc, d_herg, herg, p_param, cache, time, dt, states, ical, inal, cai_result, ina, ito, ikr, iks, ik1, tension);
 
         printf("Timer started, doing simulation.... \n\n\nGPU Usage at this moment: \n");
             if (gpu_check(15 * sample_size * datapoint_size * sizeof(double) + sizeof(param_t)) == 1) {
@@ -199,6 +245,7 @@ int main(int argc, char **argv) {
 
             strcat(filename, sample_str);
             strcat(filename, "_pace.csv");
+            printf("Working on: %s \n",filename);
 
             writer = fopen(filename, "w");
             fprintf(writer, "Time,Vm,dVm/dt,Cai,INa,INaL,ICaL,IKs,IKr,IK1,Ito,Tension\n");

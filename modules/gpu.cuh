@@ -120,6 +120,8 @@ __device__ void kernel_DoDrugSim_post(double *d_ic50, double *d_cvar, double d_c
                                         cipa_t *cipa_result, param_t *p_param);
 
 
+__global__ void kernel_print_states_cache(double *d_STATES_cache, unsigned int sample_size);
+
 
 // __device__ void kernel_DoDrugSim_single(double *d_ic50, double *d_cvar, double d_conc, double *d_CONSTANTS,
 //                                         double *d_STATES, double *d_STATES_cache, double *d_RATES, double *d_ALGEBRAIC,

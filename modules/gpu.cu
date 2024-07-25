@@ -59,7 +59,7 @@ __global__ void kernel_DrugSimulation_postpro(double *d_ic50, double *d_cvar, do
                                       unsigned int sample_size, cipa_t *temp_result, cipa_t *cipa_result, param_t *p_param) {
                                 
     unsigned short thread_id = blockIdx.x * blockDim.x + threadIdx.x;
-    printf("%lf %lf\n",d_STATES_cache[0],d_STATES_cache[1]);
+    // printf("%lf %lf\n",d_STATES_cache[0],d_STATES_cache[1]);
     if(thread_id >= sample_size){
         printf("too big, detected: %d from sample size of %d\n", thread_id, sample_size);
         return;
@@ -71,6 +71,18 @@ __global__ void kernel_DrugSimulation_postpro(double *d_ic50, double *d_cvar, do
                             d_ALGEBRAIC, d_mec_CONSTANTS, d_mec_STATES, d_mec_RATES, d_mec_ALGEBRAIC, time, states,
                             out_dt, cai_result, ina, inal, ical, ito, ikr, iks, ik1, tension, time_for_each_sample,
                             dt_for_each_sample, thread_id, sample_size, temp_result, cipa_result, p_param);
+}
+
+__global__ void kernel_print_states_cache(double *d_STATES_cache, unsigned int sample_size) {
+    unsigned short thread_id = blockIdx.x * blockDim.x + threadIdx.x;
+    if (thread_id < sample_size) {
+        // Boundary check
+        if (d_STATES_cache != nullptr) {
+            printf("Thread %d: %lf\n", thread_id, d_STATES_cache[thread_id]);
+        } else {
+            printf("Thread %d: d_STATES_cache is null\n", thread_id);
+        }
+    }
 }
 
 /**
@@ -421,10 +433,10 @@ __device__ void kernel_DoDrugSim_post(double *d_ic50, double *d_cvar, double d_c
 
         land_computeRates(tcurr[sample_id], d_mec_CONSTANTS, d_mec_RATES, d_mec_STATES, d_mec_ALGEBRAIC, y, sample_id);
         computeRates(tcurr[sample_id], d_CONSTANTS, d_RATES, d_STATES, d_ALGEBRAIC, sample_id, d_mec_RATES[TRPN + (sample_id * Land_num_of_rates)]);
-        printf("in in in \n");
+        // printf("in in in \n");
        //NOTE: Disabled in Margara
-        dt_set = set_time_step(tcurr[sample_id], time_point, max_time_step, d_CONSTANTS, d_RATES, sample_id);
-        // dt_set = 0.001;
+        // dt_set = set_time_step(tcurr[sample_id], time_point, max_time_step, d_CONSTANTS, d_RATES, sample_id);
+        dt_set = 0.001;
         
 
         if(d_STATES[(sample_id * ORd_num_of_states)+V] > inet_vm_threshold){
@@ -632,7 +644,7 @@ __device__ void kernel_DoDrugSim_post(double *d_ic50, double *d_cvar, double d_c
           // save temporary result -> ALL TEMP RESULTS IN, TEMP RESULT != WRITTEN RESULT
           float tolerance = 0.001f;
           if(cipa_datapoint<p_param->sampling_limit && fmodf(tcurr[sample_id], 1.0f) < tolerance){ // temporary solution to limit the datapoint :(
-            if(sample_id==0) {printf("%lf\n", tcurr[sample_id]);}
+            // if(sample_id==0) {printf("%lf\n", tcurr[sample_id]);}
             temp_result[sample_id].cai_data[cipa_datapoint] =  d_STATES[(sample_id * ORd_num_of_states) +cai] ;
             temp_result[sample_id].cai_time[cipa_datapoint] =  tcurr[sample_id];
             // printf("core: %d, cai_data and time:  %lf %lf datapoint: %d\n",
