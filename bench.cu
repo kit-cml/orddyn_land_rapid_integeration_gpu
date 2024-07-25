@@ -66,10 +66,10 @@ int main(int argc, char **argv) {
 
         int cache_num = get_init_data_from_file(p_param->cache_file, cache);
         printf("Found cache for %d samples\n", cache_num);
-        printf("%lf %lf %lf\n", cache[300+0],cache[300+1],cache[300+2]);
+        printf("cache: %lf %lf %lf\n", cache[300+0],cache[300+1],cache[300+2]);
         
         prepingGPUMemoryPostpro(sample_size, d_ALGEBRAIC, d_CONSTANTS, d_RATES, d_STATES, d_STATES_cache, d_mec_ALGEBRAIC, d_mec_CONSTANTS,
-                     d_mec_RATES, d_mec_STATES, d_p_param, temp_result, cipa_result, d_STATES_RESULT, d_ic50, ic50,
+                     d_mec_RATES, d_mec_STATES, d_p_param, temp_result, cipa_result, d_STATES_RESULT, d_ic50, ic50, d_cvar, cvar,
                      d_conc, conc, d_herg, herg, p_param, cache, time, dt, states, ical, inal, cai_result, ina, ito, ikr, iks, ik1, tension);
 
         printf("Timer started, doing simulation.... \n\n\nGPU Usage at this moment: \n");

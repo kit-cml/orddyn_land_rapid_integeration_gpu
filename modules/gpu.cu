@@ -59,9 +59,9 @@ __global__ void kernel_DrugSimulation_postpro(double *d_ic50, double *d_cvar, do
                                       unsigned int sample_size, cipa_t *temp_result, cipa_t *cipa_result, param_t *p_param) {
                                 
     unsigned short thread_id = blockIdx.x * blockDim.x + threadIdx.x;
-    if(thread_id==0) printf("%lf %lf\n",d_STATES_cache[0],d_STATES_cache[1]);
+    printf("%lf %lf\n",d_STATES_cache[0],d_STATES_cache[1]);
     if(thread_id >= sample_size){
-        printf("too big\n");
+        printf("too big, detected: %d from sample size of %d\n", thread_id, sample_size);
         return;
     } 
     double time_for_each_sample[10000];
@@ -380,14 +380,11 @@ __device__ void kernel_DoDrugSim_post(double *d_ic50, double *d_cvar, double d_c
     initConsts(d_CONSTANTS, d_STATES, type, conc, d_ic50, d_herg, d_cvar, p_param->is_dutta, p_param->is_cvar, bcl, epsilon, sample_id);
     applyDrugEffect(d_CONSTANTS, conc, d_ic50, epsilon, sample_id);
     land_initConsts(false, false, y, d_mec_CONSTANTS, d_mec_RATES, d_mec_STATES, d_mec_ALGEBRAIC, sample_id);
-
-// printf("in here\n");
-// printf("d_CONSTANTS %lf\n",d_CONSTANTS[(sample_id * ORd_num_of_constants)+0]);
+    
     // starting from initial value, to make things simpler for now, we're just going to replace what initConst has done 
     // to the d_STATES and bring them back to cached initial values:
-    printf("%lf\n",d_STATES_cache[(sample_id * ORd_num_of_states) + 0]);
-    for (int temp = 0; temp < ORd_num_of_states; temp++) {
-      printf("%lf\n",d_STATES_cache[(sample_id * ORd_num_of_states) + temp]);
+    int temp;
+    for (temp = 0; temp < ORd_num_of_states; temp++) {
         d_STATES[(sample_id * ORd_num_of_states) + temp] = d_STATES_cache[(sample_id * ORd_num_of_states) + temp];
     }
     

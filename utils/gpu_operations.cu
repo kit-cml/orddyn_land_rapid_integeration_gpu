@@ -62,8 +62,8 @@ void prepingGPUMemory(int sample_size, double *&d_ALGEBRAIC, double *&d_CONSTANT
 
 void prepingGPUMemoryPostpro(int sample_size, double *&d_ALGEBRAIC, double *&d_CONSTANTS, double *&d_RATES, double *&d_STATES, double *d_STATES_cache,
                       double *&d_mec_ALGEBRAIC, double *&d_mec_CONSTANTS, double *&d_mec_RATES, double *&d_mec_STATES,
-                      param_t *&d_p_param, cipa_t *&temp_result, cipa_t *&cipa_result, double *&d_STATES_RESULT, double *&d_ic50, 
-                      double *ic50, double *&d_conc, double *conc, double *&d_herg, double *herg, param_t *p_param, double *cache,
+                      param_t *&d_p_param, cipa_t *&temp_result, cipa_t *&cipa_result, double *&d_STATES_RESULT, double *&d_ic50,
+                      double *ic50, double *&d_cvar, double *cvar, double *&d_conc, double *conc, double *&d_herg, double *herg, param_t *p_param, double *cache,
                       double *time, double *dt, double *states, double *ical, double *inal, double *cai_result, double *ina, double *ito, double *ikr, double *iks, double *ik1, double *tension) {
     
     printf("preparing GPU memory space \n");
@@ -72,7 +72,7 @@ void prepingGPUMemoryPostpro(int sample_size, double *&d_ALGEBRAIC, double *&d_C
     cudaMalloc(&d_CONSTANTS, ORd_num_of_constants * sample_size * sizeof(double));
     cudaMalloc(&d_RATES, ORd_num_of_rates * sample_size * sizeof(double));
     cudaMalloc(&d_STATES, ORd_num_of_states * sample_size * sizeof(double));
-    cudaMalloc(&d_STATES_cache, (ORd_num_of_states) * sample_size * sizeof(double));
+    cudaMalloc(&d_STATES_cache, (ORd_num_of_states+2) * sample_size * sizeof(double));
 
     cudaMalloc(&d_mec_ALGEBRAIC, Land_num_of_algebraic * sample_size * sizeof(double));
     cudaMalloc(&d_mec_CONSTANTS, Land_num_of_constants * sample_size * sizeof(double));
@@ -80,9 +80,10 @@ void prepingGPUMemoryPostpro(int sample_size, double *&d_ALGEBRAIC, double *&d_C
     cudaMalloc(&d_mec_STATES, Land_num_of_states * sample_size * sizeof(double));
 
     cudaMalloc(&d_p_param, sizeof(param_t));
+
     cudaMalloc(&temp_result, sample_size * sizeof(cipa_t));
     cudaMalloc(&cipa_result, sample_size * sizeof(cipa_t));
-    cudaMalloc(&d_STATES_RESULT, ORd_num_of_states * sample_size * sizeof(double)); // check for wat later
+    
 
     cudaMalloc(&time, sample_size * datapoint_size * sizeof(double));
     cudaMalloc(&dt, sample_size * datapoint_size * sizeof(double));
@@ -96,20 +97,21 @@ void prepingGPUMemoryPostpro(int sample_size, double *&d_ALGEBRAIC, double *&d_C
     cudaMalloc(&iks, sample_size * datapoint_size * sizeof(double));
     cudaMalloc(&ik1, sample_size * datapoint_size * sizeof(double));
     cudaMalloc(&tension, sample_size * datapoint_size * sizeof(double));
+    // cudaMalloc(&d_STATES_RESULT, ORd_num_of_states * sample_size * sizeof(double)); // used by in silico, here, its just for the function
 
-   printf("Copying sample files to GPU memory space \n");
-   cudaMalloc(&d_ic50, sample_size * 14 * sizeof(double));
-   // cudaMalloc(&d_cvar, sample_size * 18 * sizeof(double));
-   cudaMalloc(&d_conc, sample_size * sizeof(double));
-   cudaMalloc(&d_herg, 6 * sizeof(double));
+    printf("Copying sample files to GPU memory space \n");
+    cudaMalloc(&d_ic50, sample_size * 14 * sizeof(double));
+    cudaMalloc(&d_cvar, sample_size * 18 * sizeof(double));
+    cudaMalloc(&d_conc, sample_size * sizeof(double));
+    cudaMalloc(&d_herg, 6 * sizeof(double));
+    
+    cudaMemcpy(d_STATES_cache, cache, (ORd_num_of_states+2) * sample_size * sizeof(double), cudaMemcpyHostToDevice);     
+    cudaMemcpy(d_ic50, ic50, sample_size * 14 * sizeof(double), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_cvar, cvar, sample_size * 18 * sizeof(double), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_conc, conc, sample_size * sizeof(double), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_p_param, p_param, sizeof(param_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_herg, herg, 6 * sizeof(double), cudaMemcpyHostToDevice);
 
-   cudaMemcpy(d_STATES_cache, cache, (ORd_num_of_states) * sample_size * sizeof(double), cudaMemcpyHostToDevice);
-   cudaMemcpy(d_ic50, ic50, sample_size * 14 * sizeof(double), cudaMemcpyHostToDevice);
-        
-   // cudaMemcpy(d_cvar, cvar, sample_size * 18 * sizeof(double), cudaMemcpyHostToDevice);
-   cudaMemcpy(d_conc, conc, sample_size * sizeof(double), cudaMemcpyHostToDevice);
-   cudaMemcpy(d_p_param, p_param, sizeof(param_t), cudaMemcpyHostToDevice);
-   cudaMemcpy(d_herg, herg, 6 * sizeof(double), cudaMemcpyHostToDevice);
 }
 
 /**
