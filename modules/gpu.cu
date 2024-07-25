@@ -436,7 +436,7 @@ __device__ void kernel_DoDrugSim_post(double *d_ic50, double *d_cvar, double d_c
         // printf("in in in \n");
        //NOTE: Disabled in Margara
         // dt_set = set_time_step(tcurr[sample_id], time_point, max_time_step, d_CONSTANTS, d_RATES, sample_id);
-        dt_set = 0.001;
+        dt_set = 0.01;
         
 
         if(d_STATES[(sample_id * ORd_num_of_states)+V] > inet_vm_threshold){
@@ -644,7 +644,7 @@ __device__ void kernel_DoDrugSim_post(double *d_ic50, double *d_cvar, double d_c
           // save temporary result -> ALL TEMP RESULTS IN, TEMP RESULT != WRITTEN RESULT
           float tolerance = 0.001f;
           if(cipa_datapoint<p_param->sampling_limit && fmodf(tcurr[sample_id], 1.0f) < tolerance){ // temporary solution to limit the datapoint :(
-            // if(sample_id==0) {printf("%lf\n", tcurr[sample_id]);}
+            if(sample_id==0) {printf("%lf\n", tcurr[sample_id]);}
             temp_result[sample_id].cai_data[cipa_datapoint] =  d_STATES[(sample_id * ORd_num_of_states) +cai] ;
             temp_result[sample_id].cai_time[cipa_datapoint] =  tcurr[sample_id];
             // printf("core: %d, cai_data and time:  %lf %lf datapoint: %d\n",
