@@ -249,9 +249,9 @@ __device__ void kernel_DoDrugSim_init(double *d_ic50, double *d_cvar, double d_c
             dt_mech[sample_id] = tcurr[sample_id] + dt[sample_id] - tcurr_mech[sample_id];
           }
           // For next i_jump
-          land_solveEuler(dt_mech[sample_id], tcurr_mech[sample_id], d_STATES[cai + (sample_id * num_of_states)] * 1000., d_mec_CONSTANTS, d_mec_RATES, d_mec_STATES, sample_id);
+          land_solveEuler(dt_mech[sample_id], tcurr_mech[sample_id], d_STATES[cai + (sample_id * ORd_num_of_states)] * 1000., d_mec_CONSTANTS, d_mec_RATES, d_mec_STATES, sample_id);
           tcurr_mech[sample_id] = tcurr_mech[sample_id] + dt_mech[sample_id];
-          computeRates(tcurr_mech[sample_id], d_CONSTANTS, d_RATES, d_STATES, d_ALGEBRAIC, sample_id, d_mec_RATES[TRPN + (sample_id * 7)]);
+          computeRates(tcurr_mech[sample_id], d_CONSTANTS, d_RATES, d_STATES, d_ALGEBRAIC, sample_id, d_mec_RATES[TRPN + (sample_id * Land_num_of_rates)]);
         }
       }  
         // dt profiling ends, old version: 
