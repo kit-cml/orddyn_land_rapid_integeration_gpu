@@ -40,12 +40,15 @@ __global__ void kernel_DrugSimulation(double *d_ic50, double *d_cvar, double *d_
     // Local arrays for each sample
     double time_for_each_sample[10000];
     double dt_for_each_sample[10000];
+    double mech_time_for_each_sample[10000];
+    double mech_dt_for_each_sample[10000];
 
     // printf("Calculating %d\n",thread_id);
      // Run the drug simulation for each sample
     kernel_DoDrugSim_init(d_ic50, d_cvar, d_conc[thread_id], d_herg, d_CONSTANTS, d_STATES, d_RATES, d_ALGEBRAIC,
                           d_mec_CONSTANTS, d_mec_RATES, d_mec_STATES, d_mec_ALGEBRAIC, d_STATES_RESULT,
-                          time_for_each_sample, dt_for_each_sample, thread_id, sample_size, temp_result, cipa_result,
+                          time_for_each_sample, dt_for_each_sample, mech_dt_for_each_sample, mech_time_for_each_sample, 
+                          thread_id, sample_size, temp_result, cipa_result,
                           p_param);
     
 }
@@ -107,8 +110,8 @@ __global__ void kernel_print_states_cache(double *d_STATES_cache, unsigned int s
 __device__ void kernel_DoDrugSim_init(double *d_ic50, double *d_cvar, double d_conc, double *d_herg, double *d_CONSTANTS,
                                       double *d_STATES, double *d_RATES, double *d_ALGEBRAIC, double *d_STATES_RESULT,
                                       double *d_mec_CONSTANTS, double *d_mec_RATES, double *d_mec_STATES,
-                                      double *d_mec_ALGEBRAIC, double *tcurr, double *dt, unsigned short sample_id,
-                                      unsigned int sample_size, cipa_t *temp_result, cipa_t *cipa_result,
+                                      double *d_mec_ALGEBRAIC, double *tcurr, double *dt,  double *dt_mech, double *tcurr_mech, 
+                                      unsigned short sample_id, unsigned int sample_size, cipa_t *temp_result, cipa_t *cipa_result,
                                       param_t *p_param) {
     unsigned int input_counter = 0;
 
@@ -157,6 +160,13 @@ __device__ void kernel_DoDrugSim_init(double *d_ic50, double *d_cvar, double d_c
     double y[7] = {0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0};
     double epsilon = 10E-14;
     double vm_repol30, vm_repol90;
+
+     // dt profiling variables
+    double min_dt = 0.002;
+    double max_dt = 0.1; 
+    // double dt_mech;
+    // double tcurr_mech;
+    int mech_jump;
 
     // Initialize constants and apply drug effects
     initConsts(d_CONSTANTS, d_STATES, type, conc, d_ic50, d_herg, d_cvar, p_param->is_dutta, p_param->is_cvar, bcl, epsilon, sample_id);
@@ -223,7 +233,29 @@ __device__ void kernel_DoDrugSim_init(double *d_ic50, double *d_cvar, double d_c
         
         solveAnalytical(d_CONSTANTS, d_STATES, d_ALGEBRAIC, d_RATES, dt[sample_id], sample_id);
         
-        land_solveEuler(dt[sample_id], tcurr[sample_id], d_STATES[cai + (sample_id * ORd_num_of_states)] * 1000., d_mec_CONSTANTS, d_mec_RATES, d_mec_STATES, sample_id);
+         // Solve Land2016 with dt profiling
+        if (dt[sample_id] >= min_dt){
+          dt_mech[sample_id] = min_dt;
+        } else {
+          dt_mech[sample_id] = dt[sample_id];
+        }
+        tcurr_mech[sample_id] = tcurr[sample_id];
+
+        if (dt[sample_id] > 0 && dt_mech[sample_id] > 0){
+        // mech_jump = plafon(dt[sample_id]/dt_mech[sample_id]); 
+        mech_jump = static_cast<int>(std::ceil(dt[sample_id]/dt_mech[sample_id]));
+        for (int i_jump = 0; i_jump < mech_jump; i_jump++){
+          if (tcurr_mech[sample_id] + dt_mech[sample_id] >= tcurr[sample_id] + dt[sample_id]){
+            dt_mech[sample_id] = tcurr[sample_id] + dt[sample_id] - tcurr_mech[sample_id];
+          }
+          // For next i_jump
+          land_solveEuler(dt_mech[sample_id], tcurr_mech[sample_id], d_STATES[cai + (sample_id * num_of_states)] * 1000., d_mec_CONSTANTS, d_mec_RATES, d_mec_STATES, sample_id);
+          tcurr_mech[sample_id] = tcurr_mech[sample_id] + dt_mech[sample_id];
+          computeRates(tcurr_mech[sample_id], d_CONSTANTS, d_RATES, d_STATES, d_ALGEBRAIC, sample_id, d_mec_RATES[TRPN + (sample_id * 7)]);
+        }
+      }  
+        // dt profiling ends, old version: 
+        // land_solveEuler(dt[sample_id], tcurr[sample_id], d_STATES[cai + (sample_id * ORd_num_of_states)] * 1000., d_mec_CONSTANTS, d_mec_RATES, d_mec_STATES, sample_id);
        
 
         // Perform checks in the last few pacing cycles
