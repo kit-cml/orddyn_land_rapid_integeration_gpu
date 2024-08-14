@@ -130,6 +130,9 @@ void edison_assign_params(int argc, char *argv[], param_t *p_param)
     else if (strcasecmp(key, "Basic_Cycle_Length") == 0) {
       p_param->bcl = strtod(value, NULL);
     }
+    else if (strcasecmp(key, "dtw") == 0) {
+      p_param->dtw = strtod(value, NULL);
+    }
     else if (strcasecmp(key, "Number_of_Pacing") == 0) {
       p_param->pace_max = strtod(value, NULL);
     }

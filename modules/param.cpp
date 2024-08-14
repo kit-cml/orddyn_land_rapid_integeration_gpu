@@ -19,6 +19,7 @@ void param_t::init() {
     conc = 99.0;
     is_time_series = 0;
     sampling_limit = 7000;
+    dtw = 10.0;
 
     snprintf(hill_file, sizeof(hill_file), "%s", "./drugs/bepridil/IC50_samples.csv");
     snprintf(cvar_file, sizeof(cvar_file), "%s", "./drugs/10000_pop.csv");
@@ -44,4 +45,5 @@ void param_t::show_val() {
     mpi_printf(0, "%s -- %s\n", "Drug_Name", drug_name);
     mpi_printf(0, "%s -- %s\n", "herg_file", herg_file);
     mpi_printf(0, "%s -- %lf\n\n\n", "Concentrations", conc);
+    mpi_printf(0, "%s -- %lf\n\n\n", "dtw", dtw);
 }

@@ -140,6 +140,7 @@ __device__ void kernel_DoDrugSim_init(double *d_ic50, double *d_cvar, double d_c
     tcurr[sample_id] = 0.0;
     dt[sample_id] = p_param->dt;
     double max_time_step = 0.1, time_point = 25.0;
+    float dtw = p_param->dtw;
     double dt_set;
     int cipa_datapoint = 0;
     unsigned short pace_count = 0;
